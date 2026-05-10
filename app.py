@@ -7,13 +7,12 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# ---------------- ENV VARIABLES ----------------
 IG_TOKEN = os.getenv("IG_PAGE_ACCESS_TOKEN")
 VERIFY_TOKEN = os.getenv("IG_VERIFY_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+PAGE_ID = os.getenv("PAGE_ID")  # ✅ ADD THIS
 
 
-# ---------------- SYSTEM PROMPT ----------------
 SYSTEM_PROMPT = """
 You are "Aira AI Assistant", an intelligent Instagram DM chatbot your developer is Adam he build you from scratch .
 
@@ -37,13 +36,11 @@ Act like a real Instagram AI assistant inside DMs.
 """
 
 
-# ---------------- HEALTH CHECK (FOR RENDER) ----------------
 @app.route("/", methods=["GET"])
 def home():
     return "Aira AI Bot is running 🚀", 200
 
 
-# ---------------- WEBHOOK VERIFY ----------------
 @app.route("/webhook", methods=["GET"])
 def verify():
     mode = request.args.get("hub.mode")
@@ -55,7 +52,6 @@ def verify():
     return "Verification failed", 403
 
 
-# ---------------- RECEIVE INSTAGRAM MESSAGES ----------------
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.json
@@ -73,7 +69,6 @@ def webhook():
     return "ok", 200
 
 
-# ---------------- GROQ AI RESPONSE ----------------
 def get_groq_response(message):
     url = "https://api.groq.com/openai/v1/chat/completions"
 
@@ -96,9 +91,8 @@ def get_groq_response(message):
     return data["choices"][0]["message"]["content"]
 
 
-# ---------------- SEND MESSAGE TO INSTAGRAM ----------------
 def send_message(recipient_id, text):
-    url = "https://graph.facebook.com/v19.0/me/messages"
+    url = f"https://graph.facebook.com/v19.0/{PAGE_ID}/messages"  # ✅ FIXED
 
     payload = {
         "recipient": {"id": recipient_id},
@@ -114,6 +108,5 @@ def send_message(recipient_id, text):
     requests.post(url, json=payload, headers=headers)
 
 
-# ---------------- RUN APP ----------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
